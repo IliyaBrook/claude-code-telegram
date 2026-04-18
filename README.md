@@ -3,6 +3,9 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 
+> **Maintained fork** of [RichardAtCT/claude-code-telegram](https://github.com/RichardAtCT/claude-code-telegram).
+> All additions have open PRs against upstream — see [Fork additions](#fork-additions) for the list.
+
 A Telegram bot that gives you remote access to [Claude Code](https://claude.ai/code). Chat naturally with Claude about your projects from anywhere -- no terminal commands needed.
 
 ## What is this?
@@ -14,6 +17,32 @@ This bot connects Telegram to Claude Code, providing a conversational AI interfa
 - **Code on the go** from any device with Telegram
 - **Receive proactive notifications** from webhooks, scheduled jobs, and CI/CD events
 - **Stay secure** with built-in authentication, directory sandboxing, and audit logging
+
+## Fork additions
+
+Extras in this fork that are not yet in upstream. Both have open PRs against
+[RichardAtCT/claude-code-telegram](https://github.com/RichardAtCT/claude-code-telegram)
+and are merged here early so users can run them today.
+
+### Chunked paste buffering ([PR #187](https://github.com/RichardAtCT/claude-code-telegram/pull/187))
+
+When a paste exceeds Telegram's 4096-char limit, the Telegram client silently
+splits it into multiple messages. Upstream fires Claude once per chunk, so a
+single paste becomes N independent prompts. This fork debounces the chunks
+and sends them as one combined prompt.
+
+- `CHUNK_BUFFER_TIMEOUT` (default `0.5`) — seconds to wait between chunks
+- `CHUNK_BUFFER_THRESHOLD` (default `3000`) — min length that triggers buffering
+
+### Photo-album buffering ([PR #188](https://github.com/RichardAtCT/claude-code-telegram/pull/188))
+
+Telegram delivers album uploads (text + N images) as N separate updates sharing
+a `media_group_id`, with the caption attached to only one of them. Upstream
+calls Claude once per photo, producing N replies. This fork buffers by
+`media_group_id` and sends all photos + caption to Claude in a single request.
+
+- `MEDIA_GROUP_BUFFER_TIMEOUT` (default `1.0`) — seconds to wait for sibling
+  photos in an album before flushing
 
 ## Quick Start
 
