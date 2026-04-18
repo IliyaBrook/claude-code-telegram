@@ -99,5 +99,10 @@ DEFAULT_CHUNK_BUFFER_TIMEOUT = 0.5
 # normal chat messages.
 DEFAULT_CHUNK_BUFFER_THRESHOLD = 3000
 
+# Media-group (photo album) buffering. Telegram delivers album photos as
+# separate Updates sharing a media_group_id; we debounce them into a
+# single Claude request.
+DEFAULT_MEDIA_GROUP_BUFFER_TIMEOUT = 1.0
+
 # Logging
 LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
