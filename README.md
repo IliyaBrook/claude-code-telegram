@@ -20,11 +20,11 @@ This bot connects Telegram to Claude Code, providing a conversational AI interfa
 
 ## Fork additions
 
-Extras in this fork that are not yet in upstream. Both have open PRs against
+Extras in this fork that are not yet in upstream. All have open PRs against
 [RichardAtCT/claude-code-telegram](https://github.com/RichardAtCT/claude-code-telegram)
 and are merged here early so users can run them today.
 
-### Chunked paste buffering ([PR #187](https://github.com/RichardAtCT/claude-code-telegram/pull/187))
+### Chunked paste buffering ([PR #187](https://github.com/RichardAtCT/claude-code-telegram/pull/187), [issue #186](https://github.com/RichardAtCT/claude-code-telegram/issues/186))
 
 When a paste exceeds Telegram's 4096-char limit, the Telegram client silently
 splits it into multiple messages. Upstream fires Claude once per chunk, so a
@@ -34,7 +34,7 @@ and sends them as one combined prompt.
 - `CHUNK_BUFFER_TIMEOUT` (default `0.5`) — seconds to wait between chunks
 - `CHUNK_BUFFER_THRESHOLD` (default `3000`) — min length that triggers buffering
 
-### Photo-album buffering ([PR #188](https://github.com/RichardAtCT/claude-code-telegram/pull/188))
+### Photo-album buffering ([PR #188](https://github.com/RichardAtCT/claude-code-telegram/pull/188), [issue #186](https://github.com/RichardAtCT/claude-code-telegram/issues/186))
 
 Telegram delivers album uploads (text + N images) as N separate updates sharing
 a `media_group_id`, with the caption attached to only one of them. Upstream
@@ -43,6 +43,27 @@ calls Claude once per photo, producing N replies. This fork buffers by
 
 - `MEDIA_GROUP_BUFFER_TIMEOUT` (default `1.0`) — seconds to wait for sibling
   photos in an album before flushing
+
+### End-to-end token authentication ([PR #190](https://github.com/RichardAtCT/claude-code-telegram/pull/190), [issue #58](https://github.com/RichardAtCT/claude-code-telegram/issues/58))
+
+Upstream exposed `ENABLE_TOKEN_AUTH` and a `TokenAuthProvider`, but the bot
+never wired tokens into the middleware — so `/auth <token>` had no effect and
+admins had no way to issue or revoke tokens at runtime. This fork completes
+the flow: tokens are persisted in SQLite, validated by the auth middleware,
+and managed through a full `/auth` command surface. Admins can also manage
+the whitelist dynamically without editing `ALLOWED_USERS` and restarting.
+
+`/auth` subcommands:
+
+- `/auth <token>` — authenticate with a token
+- `/auth status` — show your current authentication info
+- `/auth generate <user_id>` — (admin) issue a token for a user
+- `/auth revoke <user_id>` — (admin) revoke a user's token
+- `/auth add <user_id>` — (admin) add a user to the persistent allowlist
+- `/auth remove <user_id>` — (admin) remove a user from the allowlist
+
+Tokens use rolling expiration — every successful use extends the token's
+lifetime, so active users are not logged out mid-session.
 
 ## Quick Start
 
