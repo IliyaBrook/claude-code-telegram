@@ -125,7 +125,7 @@ class Settings(BaseSettings):
         default=[],
         description="List of explicitly disallowed Claude tools/commands",
     )
-    claude_setting_sources: List[str] = Field(
+    claude_setting_sources: Optional[List[str]] = Field(
         default=["project"],
         description=(
             "Claude SDK setting sources to load at runtime. "
