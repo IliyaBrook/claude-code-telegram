@@ -125,6 +125,15 @@ class Settings(BaseSettings):
         default=[],
         description="List of explicitly disallowed Claude tools/commands",
     )
+    claude_setting_sources: List[str] = Field(
+        default=["project"],
+        description=(
+            "Claude SDK setting sources to load at runtime. "
+            "Allowed values: 'project' (CWD/.claude/), "
+            "'user' (~/.claude/), 'local' (.claude/settings.local.json). "
+            "Comma-separated in env (e.g. CLAUDE_SETTING_SOURCES=project,user)."
+        ),
+    )
 
     # Retry settings
     claude_retry_max_attempts: int = Field(
@@ -400,6 +409,27 @@ class Settings(BaseSettings):
         if isinstance(v, list):
             return [str(tool) for tool in v]
         return v  # type: ignore[no-any-return]
+
+    @field_validator("claude_setting_sources", mode="before")
+    @classmethod
+    def parse_claude_setting_sources(cls, v: Any) -> List[str]:
+        """Parse comma-separated setting sources and validate values."""
+        allowed = {"project", "user", "local"}
+        if v is None or v == "":
+            return ["project"]
+        if isinstance(v, str):
+            sources = [s.strip() for s in v.split(",") if s.strip()]
+        elif isinstance(v, list):
+            sources = [str(s).strip() for s in v if str(s).strip()]
+        else:
+            return v  # type: ignore[no-any-return]
+        invalid = [s for s in sources if s not in allowed]
+        if invalid:
+            raise ValueError(
+                f"Invalid claude_setting_sources values: {invalid}. "
+                f"Allowed: {sorted(allowed)}"
+            )
+        return sources or ["project"]
 
     @field_validator("approved_directory")
     @classmethod
