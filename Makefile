@@ -1,5 +1,6 @@
 .PHONY: install dev test lint format clean help run run-watch run-remote remote-attach remote-stop \
-       bump-patch bump-minor bump-major release version
+       bump-patch bump-minor bump-major release version \
+       restart start stop status logs logs-tail
 
 # Default target
 help:
@@ -20,6 +21,12 @@ help:
 	@echo "  run-remote    - Start bot in tmux on remote Mac (unlocks keychain)"
 	@echo "  remote-attach - Attach to running bot tmux session"
 	@echo "  remote-stop   - Stop the bot tmux session"
+	@echo "  restart       - Restart claude-telegram-bot systemd service"
+	@echo "  start         - Start claude-telegram-bot systemd service"
+	@echo "  stop          - Stop claude-telegram-bot systemd service"
+	@echo "  status        - Show claude-telegram-bot service status"
+	@echo "  logs          - Tail service logs (follow)"
+	@echo "  logs-tail     - Last 100 lines of service logs"
 
 install:
 	poetry install --no-dev
@@ -107,3 +114,25 @@ release:  ## Push the current version tag to trigger the release workflow
 	CURRENT_VERSION=$$(poetry version -s) && \
 	git push && git push origin "v$$CURRENT_VERSION" && \
 	echo "Pushed v$$CURRENT_VERSION. Release workflow will run on GitHub."
+
+# --- Systemd service management (user unit on brooks-server) ---
+
+restart:  ## Restart claude-telegram-bot systemd service
+	systemctl --user restart claude-telegram-bot
+	@systemctl --user status claude-telegram-bot --no-pager --lines=0
+
+start:  ## Start claude-telegram-bot systemd service
+	systemctl --user start claude-telegram-bot
+	@systemctl --user status claude-telegram-bot --no-pager --lines=0
+
+stop:  ## Stop claude-telegram-bot systemd service
+	systemctl --user stop claude-telegram-bot
+
+status:  ## Show service status
+	systemctl --user status claude-telegram-bot --no-pager
+
+logs:  ## Tail service logs (follow)
+	journalctl --user -u claude-telegram-bot -f
+
+logs-tail:  ## Last 100 lines of service logs
+	journalctl --user -u claude-telegram-bot -n 100 --no-pager
